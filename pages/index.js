@@ -1,8 +1,7 @@
-import { Inter } from 'next/font/google'
 import { useState } from 'react'
+import { Button } from '@mui/material'
 import Papa from 'papaparse'
-
-const inter = Inter({ subsets: ['latin'] })
+import PdfMake from '../components/pdf-make/pdf-make'
 
 export default function Home() {
   const [jsonData, setJsonData] = useState(null)
@@ -15,23 +14,39 @@ export default function Home() {
         header: true,
         dynamicTyping: true,
         complete: (result) => {
-          setJsonData(result.data)
+          const data = result.data.map(row => ({
+            ...row,
+            HorasDecimal: row.Horas ? parseFloat(row.Horas.replace(',', '.')) : 0 // Definindo como 0 caso Horas seja undefined
+          }))
+          setJsonData(data)
         },
         error: (error) => {
           alert(error.message)
-        }
+        },
       })
     }
   }
 
+  const generatePDF = () => {
+    PdfMake(jsonData)
+    //alert('PDF Gerado com sucesso')
+  }
+
   return (
-    <main className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}>
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <input type="file" name="file" accept=".csv" onChange={handleFileUpload} />
+    <main className={`flex min-h-screen flex-col items-center justify-between p-24`}>
+      <div>
+        <h1 className="text-4xl font-bold">Tracking Time CSV to PDF</h1>
+      </div>
+      <div className="max-w-5xl items-center justify-center font-mono text-sm lg:flex">
+        <div className="flex justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit">
+          <input type="file" name="file" accept=".csv" onChange={handleFileUpload} />
+        </div>
         {jsonData && (
-          <pre>
-            {JSON.stringify(jsonData, null, 2)}
-          </pre>
+          <div className="mt-4">
+            <Button variant="contained" onClick={generatePDF}>
+              Gerar PDF
+            </Button>
+          </div>
         )}
       </div>
     </main>
